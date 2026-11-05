@@ -35,7 +35,7 @@ After the restart a `/pdf` command is registered as well: `/pdf manual 300` retu
 
 Requirements: DSH with the host `tools` and `systemPrompt` services (both are part of the normal base composition), Node 22.19+ or 24+.
 
-Compatible with DSH 0.2.1-rc.5 (tested); 0.3 and later are not guaranteed.
+Compatible with the DSH 0.2.1 line (alpha / rc / stable); 0.3 and later are not guaranteed.
 
 ## Use
 
