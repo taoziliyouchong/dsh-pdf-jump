@@ -1,7 +1,7 @@
 {
   "name": "dsh-pdf-jump",
   "version": "0.1.3",
-  "description": "在 DSH 侧栏看本地 PDF：按页码跳页、整本浏览（缩略图先出、滚到哪页换高清），也可用原生预览直接打开。一个包装两个工具，另带 /pdf 命令。",
+  "description": "在 DSH 侧栏里看本地 PDF：跳到任意一页，整本连着看。",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -44,6 +44,7 @@
   "scripts": {
     "smoke": "node scripts/smoke.mjs"
   },
+  "author": "taoziliyouchong",
   "license": "MIT",
   "repository": {
     "type": "git",
