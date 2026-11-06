@@ -1,0 +1,50 @@
+name: 插件问题反馈
+description: 插件报错、行为不对、装不上
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        填完这几项能省掉一轮来回。也可以直接加 QQ 号 **2171960697**。
+  - type: input
+    id: dsh-version
+    attributes:
+      label: DSH 版本
+      description: 设置页或关于里能看到，形如 0.2.1-rc.5
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: 插件版本
+      description: 插件市场卡片上的版本，或安装目录里 package.json 的 version
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 现象与复现步骤
+      description: 做了什么、看到什么、期望是什么
+    validations:
+      required: true
+  - type: textarea
+    id: error-text
+    attributes:
+      label: 报错原文
+      description: 控制台或界面上的完整报错，不要只截一句话
+    validations:
+      required: false
+  - type: input
+    id: env
+    attributes:
+      label: 系统与环境
+      description: Windows 版本、Node 版本
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图
+      description: 直接拖进来
+    validations:
+      required: false

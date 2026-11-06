@@ -15,6 +15,9 @@ export const name = 'dsh-pdf-jump'
 /** 需要的服务：工具注册表 + 系统提示（让模型知道什么时候该用它）+ 命令注册表（/pdf）。 */
 export const inject = ['tools', 'systemPrompt', 'commands']
 
+/** 报错尾行：插件出问题时，使用者第一眼看的就是错误文本。 */
+const FEEDBACK_HINT = '遇到问题：加 QQ 号 2171960697，或开 Issue https://github.com/taoziliyouchong/dsh-pdf-jump/issues'
+
 /**
  * 每轮都在模型上下文里的使用说明。工具描述只在工具列表里出现一次，
  * 这段公告把「什么时候用 / 什么时候不用」说清楚，保证模型选得对。
@@ -160,7 +163,7 @@ export function apply(ctx, config = {}) {
             if (config.prefetch !== false) viewer.prefetch(pdf, page)
             return { kind: 'success', text: `[📄 ${basename(pdf)} · 第 ${page} 页](<http://127.0.0.1:${port}/v/${id}/${page}>)` }
           } catch (error) {
-            return { kind: 'error', text: error instanceof Error ? error.message : String(error) }
+            return { kind: 'error', text: (error instanceof Error ? error.message : String(error)) + '\n\n' + FEEDBACK_HINT }
           }
         },
       })

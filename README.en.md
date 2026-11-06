@@ -98,6 +98,13 @@ Optional, in the profile patch row (affects `pdf-view` only):
 - **The sidebar shows a blank page or "blocked"** (for `pdf-view` URLs): the in-app Sidebar Browser blocks loopback addresses unless they are allowlisted. Add `127.0.0.1:8731` (and whichever port in 8732–8750 is in use), or set *Settings → General → Open chat links in* to the default browser.
 - **A link from an older conversation says "connection refused"**: either the viewer port changed (another program holds 8731) or the PDF file moved. Call the tool again for a fresh link; `pdf-open` paths are unaffected.
 
+## Feedback
+
+- Open an issue: https://github.com/taoziliyouchong/dsh-pdf-jump/issues — searchable, and others can help.
+- Or reach me on QQ: **2171960697** (mention which plugin you installed when adding the contact).
+
+Please include: DSH version, plugin version, the exact error text, and a screenshot.
+
 ## License
 
 MIT
