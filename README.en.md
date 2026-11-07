@@ -73,7 +73,7 @@ Optional, in the profile patch row (affects `pdf-view` only):
     prefetch: true
     prefetchWindow: 6
     roots:
-      - D:/manuals
+      - /path/to/manuals
 ```
 
 | Field | Default | Meaning |

@@ -74,7 +74,7 @@ dsh plugin --profile web add github:taoziliyouchong/dsh-pdf-jump
     prefetch: true
     prefetchWindow: 6
     roots:
-      - D:/manuals
+      - <你的手册目录>
 ```
 
 | 字段 | 默认 | 含义 |
