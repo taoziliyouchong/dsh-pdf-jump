@@ -5,7 +5,7 @@
 Read local PDFs **inside the DSH sidebar**. One install ships two independent tools:
 
 - **`pdf-view` (default)** — renders pages locally for **jumping to a page number** and **whole-document browsing**. The whole-document view fills the list with thumbnails first, swaps each page to full size when it scrolls into view, and has a page box at the top. Works anywhere, even without the native preview.
-- **`pdf-open`** — opens the PDF with **DSH's native PDF preview** (client-side rendering, no image generation, no local server, selectable text). Used when you explicitly ask for the native preview, the fastest path, or no images.
+- **`pdf-open`** — opens the PDF with **DSH's native PDF preview** (client-side rendering, no image generation, no local server, selectable text). Used when you explicitly ask for the native preview, the fastest path, or no images. It calls `sidebar_open` itself; when the current session has no `sidebar_open` (the third-party sidebar plugin that provides it is not installed, or its "model opens the sidebar" switch is off), it falls back to the `pdf-view` renderer and returns a clickable link (`opened=false`).
 
 Page numbers follow **PDF page order** (1 = first page of the file). The plugin deliberately does not infer the number printed in a footer: manuals often mix whole-book numbering with `chapter-page` numbering.
 
@@ -35,7 +35,7 @@ After the restart a `/pdf` command is registered as well: `/pdf manual 300` retu
 
 Requirements: DSH with the host `tools` and `systemPrompt` services (both are part of the normal base composition), Node 22.19+ or 24+.
 
-Compatible with the DSH 0.2.1 line (alpha / rc / stable); 0.3 and later are not guaranteed.
+Compatible with DSH 0.2.2-rc.1; later versions are untested.
 
 ## Use
 
@@ -47,13 +47,13 @@ Compatible with the DSH 0.2.1 line (alpha / rc / stable); 0.3 and later are not 
 | Skip model judgement and open directly | `/pdf <file or fragment> [page]` |
 | Extract text / metadata | install the `dsh-pdf` plugin and use its `pdf_info` / `pdf_extract_text` |
 
-Both tools accept an absolute/relative path or a file-name fragment (for example `NB系列 安装手册`); relative paths resolve against the session working directory. Results are one clickable document line: `pdf-open` points at the file itself (opened by the native preview), `pdf-view` points at the local viewer page.
+Both tools accept an absolute/relative path or a file-name fragment (for example `NB系列 安装手册`); relative paths resolve against the session working directory. Results are one clickable document line: `pdf-open` calls `sidebar_open` for the native preview (or falls back to the viewer link), `pdf-view` points at the local viewer page.
 
 ## How it works
 
-- `pdf-open` only resolves the path and returns it for `sidebar_open`; all rendering happens in the DSH client.
+- `pdf-open` resolves the path and calls `sidebar_open` (when the session has it) for the native preview; without `sidebar_open` it falls back to a `pdf-view` viewer link.
 - `pdf-view` runs a local HTTP server bound to `127.0.0.1`; it tries ports 8731–8750, reuses a server already started by another DSH process, and starts as soon as the plugin loads. It stays up for the whole DSH session (`idleMinutes: 0`), so links from earlier conversations keep working.
-- `pdf-view` renders pages with `pdfjs-dist` and `@napi-rs/canvas` into PNGs cached in the OS temp directory. A call warms the requested page ±2; opening a page warms ±`prefetchWindow` around it, outward one step at a time. Cached pages are served directly without entering the render queue.
+- `pdf-view` renders pages with `pdfjs-dist` and `@napi-rs/canvas` into PNGs cached in the OS temp directory. A call warms the requested page ±2; opening a page warms ±`prefetchWindow` around it, outward one step at a time. Cached pages are served directly without entering the render queue. Page images and thumbnails carry a 1-hour browser cache, so flipping back and forth does not re-download them.
 - Whole-document view fills the list with 0.8× JPEG thumbnails first (a dozen milliseconds per page) and swaps each page to the full-size PNG as it scrolls into view. Every page carries an anchor (`#p40`); the page box at the top scrolls to the requested page.
 - The `/pdf` command always goes through `pdf-view` (single-page mode), starting at page 1 when no page is given; call `pdf-open` directly (or ask for the native preview) when you want the native viewer.
 - Viewer URLs are short paths (`/v/<id>/<page>`, `/d/<id>`, `/p/<id>/<page>.png`, `/t/<id>/<page>.jpg`) with no query string; the id maps to the file through a small registry in the temp directory. Combined with the eager start on the same port, a link from an earlier conversation opens again after DSH restarts.
@@ -89,7 +89,7 @@ Optional, in the profile patch row (affects `pdf-view` only):
 
 ## Limitations
 
-- `pdf-open` relies on DSH's built-in PDF preview; use the default `pdf-view` where that preview is absent.
+- `pdf-open`'s native preview needs a sidebar plugin that registers the `sidebar_open` tool (for example dsh-better-sidebar); that feature is off by default and must be enabled in its settings ("model opens the sidebar"). Without it, `pdf-open` falls back to the `pdf-view` renderer; no third-party plugin is needed just to read PDFs.
 - `pdf-view` pages are images: no text selection and no full-text search. Install the `dsh-pdf` plugin and use its `pdf_extract_text` when you need the text.
 - Rendering needs the `@napi-rs/canvas` prebuilt binary, which covers Windows, macOS and Linux on x64/arm64.
 
