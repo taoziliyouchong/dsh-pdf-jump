@@ -62,20 +62,8 @@ dsh plugin --profile web add github:taoziliyouchong/dsh-pdf-jump
 
 ## 配置
 
-可选，写在 profile 的 patch 行里（只影响 `pdf-view`）：
+可选，写在 profile 的 patch 行里（只影响 `pdf-view`）；字段与默认值：
 
-```yaml
-- id: dsh-pdf-jump
-  name: dsh-pdf-jump
-  config:
-    port: 8731
-    scale: 2
-    idleMinutes: 0
-    prefetch: true
-    prefetchWindow: 6
-    roots:
-      - <你的手册目录>
-```
 
 | 字段 | 默认 | 含义 |
 | --- | --- | --- |

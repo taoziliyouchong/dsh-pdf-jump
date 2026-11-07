@@ -47,7 +47,7 @@ Compatible with DSH 0.2.1-alpha.3 through 0.2.2-rc.1 (the highest version verifi
 | Skip model judgement and open directly | `/pdf <file or fragment> [page]` |
 | Extract text / metadata | install the `dsh-pdf` plugin and use its `pdf_info` / `pdf_extract_text` |
 
-Both tools accept an absolute/relative path or a file-name fragment (for example `NB系列 安装手册`); relative paths resolve against the session working directory. Results are one clickable document line: `pdf-open` calls `sidebar_open` for the native preview (or falls back to the viewer link), `pdf-view` points at the local viewer page.
+Both tools accept an absolute/relative path or a file-name fragment; relative paths resolve against the session working directory. Results are one clickable document line: `pdf-open` calls `sidebar_open` for the native preview (or falls back to the viewer link), `pdf-view` points at the local viewer page.
 
 ## How it works
 
@@ -63,18 +63,6 @@ Both tools accept an absolute/relative path or a file-name fragment (for example
 
 Optional, in the profile patch row (affects `pdf-view` only):
 
-```yaml
-- id: dsh-pdf-jump
-  name: dsh-pdf-jump
-  config:
-    port: 8731
-    scale: 2
-    idleMinutes: 0
-    prefetch: true
-    prefetchWindow: 6
-    roots:
-      - /path/to/manuals
-```
 
 | Field | Default | Meaning |
 | --- | --- | --- |
@@ -89,7 +77,7 @@ Optional, in the profile patch row (affects `pdf-view` only):
 
 ## Limitations
 
-- `pdf-open`'s native preview needs a sidebar plugin that registers the `sidebar_open` tool (for example dsh-better-sidebar); that feature is off by default and must be enabled in its settings ("model opens the sidebar"). Without it, `pdf-open` falls back to the `pdf-view` renderer; no third-party plugin is needed just to read PDFs.
+- `pdf-open`'s native preview needs a sidebar plugin that registers the `sidebar_open` tool; that feature is off by default and must be enabled in its settings ("model opens the sidebar"). Without it, `pdf-open` falls back to the `pdf-view` renderer; no third-party plugin is needed just to read PDFs.
 - `pdf-view` pages are images: no text selection and no full-text search. Install the `dsh-pdf` plugin and use its `pdf_extract_text` when you need the text.
 - Rendering needs the `@napi-rs/canvas` prebuilt binary, which covers Windows, macOS and Linux on x64/arm64.
 
