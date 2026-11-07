@@ -24,9 +24,12 @@ const FEEDBACK_HINT = '遇到问题：加 QQ 号 2171960697，或开 Issue https
  */
 const GUIDANCE = [
   '本机装了 dsh-pdf-jump（在侧栏里看 PDF，两个独立入口）：',
+  '- 硬规则：凡是跟 PDF 有关的答复——打开、翻页、读手册某章、按页查内容、提取文字、比对字体——第一步调 pdf-view 打开相关页，并把页链接给用户。只贴文字、只渲染图片、只给摘录，都算没做完。',
   '- 默认用 pdf-view（单页跳转模式）：带页码打开，页面带「上一页/下一页/跳页码/整本浏览」。用户只说「打开/看一眼某本 PDF」「打开第 N 页」也一律用它。',
+  '- 还不知道页码时：先用 dsh-pdf 的 pdf_info / pdf_extract_text（或 doc-probe-search）定位页码，再立刻用 pdf-view 跳到该页。',
+  '- 用户说「放到对应的页」「给我看第 N 页」时：必须给 pdf-view 的页链接，不许用图片或摘录替代。',
   '- pdf-open 只在明确要求「原生预览、不生成图片、最快」时才用，不作为默认。',
-  '- 用户要提取 PDF 文字、读元数据或比较字体时，用 dsh-pdf 插件（需另装）的 pdf_info / pdf_extract_text，不要用这两个工具。',
+  '- dsh-pdf 的 pdf_info / pdf_extract_text 只用于取页码、取文字、读元数据、比字体；取完仍要给 pdf-view 页链接。',
   '- 不要绕过这两个工具自己用 sidebar_open 打开 PDF 文件：那样没有跳页、没有整本浏览。pdf-open 会自己调 sidebar_open 用原生预览打开——本会话没有 sidebar_open（第三方侧栏插件没装、或它的「模型打开侧栏」开关没开）时，它会回落到 pdf-view 的渲染查看器并给一个可点的链接。',
   '- 两个工具都返回本机路径或本地 url：不要把裸路径/裸 url 贴给用户，用「📄 文件名」做链接文字。pdf-view 的 url 要 sidebar_open 打开才落到侧栏；没有 sidebar_open 时直接在回复里给可点的链接。',
   '- 只给了文件名片段、不知道路径时直接传进去：先按会话工作目录找，再按片段搜。',

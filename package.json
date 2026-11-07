@@ -1,6 +1,6 @@
 {
   "name": "dsh-pdf-jump",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "在 DSH 侧栏里看本地 PDF：跳到任意一页，整本连着看。",
   "type": "module",
   "main": "index.js",
