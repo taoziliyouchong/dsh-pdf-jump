@@ -35,7 +35,7 @@ dsh plugin --profile web add github:taoziliyouchong/dsh-pdf-jump
 
 要求：DSH 带宿主 `tools` 与 `systemPrompt` 服务（普通基础组合都含），Node 22.19+ 或 24+。
 
-兼容：DSH 0.2.2-rc.1 验证通过；更高版本未验证。
+兼容：DSH 0.2.1-alpha.3 ～ 0.2.2-rc.1（本机实际运行验证过的最高版本）；更高版本未验证。
 
 ## 用法
 
@@ -54,6 +54,7 @@ dsh plugin --profile web add github:taoziliyouchong/dsh-pdf-jump
 - `pdf-open` 解析路径后直接调 `sidebar_open`（若本会话有）用原生预览打开；没有 `sidebar_open` 时自动回落到 `pdf-view` 的查看器链接。
 - `pdf-view` 的本地 HTTP 服务只绑 `127.0.0.1`，端口从 8731 往上试，复用别的 DSH 进程已起的服务；插件一加载就启动，整个 DSH 会话期间常驻（`idleMinutes: 0`），旧对话里的链接不用重新生成。
 - `pdf-view` 用 `pdfjs-dist` + `@napi-rs/canvas` 把页面渲成 PNG 缓存在系统临时目录；工具一调用先暖请求页和前后各 2 页，打开后以当前页为中心向两边各暖 6 页，已缓存的页直接读盘、不进渲染队列。页图与缩略图带 1 小时浏览器缓存，来回翻页不重复下载。
+- 渲染在**子进程**里做（`lib/render-child.mjs`，一页一进程）：同一个宿主里若还有别的插件带不同版本的 pdf.js，后写的那份会把 `globalThis.pdfjsWorker` 换成自己的，同进程混合会报「API version … does not match Worker version …」。子进程有自己的 module graph 与全局，互不影响；代价是每页首次渲染多 0.3–0.8 秒。
 - 整本浏览先用 0.8 倍 JPEG 缩略图铺满（每页十几毫秒），滚到哪页再把那页换成全尺寸 PNG；每一页都有锚点（`#p40`），整本页顶部输入页码即滚到该页。
 - `/pdf` 命令固定走 `pdf-view`（单页跳转模式），不带页码时从第 1 页起；要原生预览就直接调 `pdf-open`，或说「原生预览打开」。
 - 查看地址是短路径（`/v/<id>/<页>`、`/d/<id>`、`/p/<id>/<页>.png`、`/t/<id>/<页>.jpg`），不带查询串；id 通过系统临时目录里的小注册表映射到文件。配合「插件加载即启动、端口固定」，DSH 重启后旧对话里的链接也能重新打开。

@@ -27,8 +27,8 @@ const GUIDANCE = [
   '- 默认用 pdf-view（单页跳转模式）：带页码打开，页面带「上一页/下一页/跳页码/整本浏览」。用户只说「打开/看一眼某本 PDF」「打开第 N 页」也一律用它。',
   '- pdf-open 只在明确要求「原生预览、不生成图片、最快」时才用，不作为默认。',
   '- 用户要提取 PDF 文字、读元数据或比较字体时，用 dsh-pdf 插件（需另装）的 pdf_info / pdf_extract_text，不要用这两个工具。',
-  '- 不要绕过这两个工具自己用 sidebar_open 打开 PDF 文件：那样没有跳页、没有整本浏览；pdf-open 返回的路径再交给 sidebar_open 才是正确顺序。',
-  '- 两个工具都返回本机路径或本地 url：有 sidebar_open 就先调它开在侧栏；不要把裸路径/裸 url 贴给用户，用「📄 文件名」做链接文字。',
+  '- 不要绕过这两个工具自己用 sidebar_open 打开 PDF 文件：那样没有跳页、没有整本浏览。pdf-open 会自己调 sidebar_open 用原生预览打开——本会话没有 sidebar_open（第三方侧栏插件没装、或它的「模型打开侧栏」开关没开）时，它会回落到 pdf-view 的渲染查看器并给一个可点的链接。',
+  '- 两个工具都返回本机路径或本地 url：不要把裸路径/裸 url 贴给用户，用「📄 文件名」做链接文字。pdf-view 的 url 要 sidebar_open 打开才落到侧栏；没有 sidebar_open 时直接在回复里给可点的链接。',
   '- 只给了文件名片段、不知道路径时直接传进去：先按会话工作目录找，再按片段搜。',
   '- 用户说「点了链接没反应 / 打不开」时，说明是侧栏浏览器默认拦截本机地址：建议把「网页链接默认打开方式」改成默认浏览器，或把 127.0.0.1:<端口> 加进侧栏设置里的本机地址白名单。',
   '- 旧对话里的 url 在服务空闲退出后会失效，不要复用；每次重新调用取新地址。',
@@ -63,12 +63,15 @@ const output = {
 }
 
 /** 当前会话的工作目录；取不到时退回进程目录。 */
-function sessionCwd(ctx, exec) {
+async function sessionCwd(ctx, exec) {
   try {
     const workingDirectory = ctx.get?.('workingDirectory')
-    const session = exec?.agent?.session
-    if (workingDirectory && session) return workingDirectory.get(session)
-  } catch { /* 老版本没有这个服务，用进程目录 */ }
+    if (workingDirectory && exec?.agent) {
+      // ensure() 按 Agent 取会话目录（get() 要的是 Session 对象，工具上下文只有 Agent）。
+      return await workingDirectory.ensure(exec.agent, exec?.signal)
+    }
+    if (workingDirectory?.defaultDirectory) return workingDirectory.defaultDirectory
+  } catch { /* 服务不可用或目录已被删除，用进程目录 */ }
   return process.cwd()
 }
 
@@ -117,10 +120,13 @@ export function apply(ctx, config = {}) {
         output,
         isConcurrencySafe: () => true,
         async execute(args, exec) {
-          const cwd = args.cwd ? resolve(String(args.cwd)) : sessionCwd(ctx, exec)
+          const cwd = args.cwd ? resolve(String(args.cwd)) : await sessionCwd(ctx, exec)
           const pdf = resolvePdf(args.file, cwd, extraRoots)
           const port = await ensureViewer()
-          const page = Math.max(1, Math.round(Number(args.page) || 1))
+          const requested = Math.max(1, Math.round(Number(args.page) || 1))
+          // 超出总页数时钳到最后一页——和查看器里显示的一致，返回文案不报一个看不到的页码。
+          const total = await viewer.pageCount(pdf).catch(() => 0)
+          const page = total > 0 ? Math.min(total, requested) : requested
           const id = registerFile(pdf)
           // 工具一返回就在后台把这一页和附近几页渲进缓存，用户点开时直接取图。
           if (config.prefetch !== false) viewer.prefetch(pdf, page)
@@ -156,9 +162,11 @@ export function apply(ctx, config = {}) {
             if (!raw) return { kind: 'error', text: '用法：/pdf <PDF 路径或文件名片段> [页码]' }
             const matched = raw.match(/^(.*?)\s+(\d+)$/)
             const target = matched ? matched[1].trim() : raw
-            const page = matched ? Math.max(1, Math.round(Number(matched[2]))) : 1
+            const requested = matched ? Math.max(1, Math.round(Number(matched[2]))) : 1
             const pdf = resolvePdf(target, process.cwd(), extraRoots)
             const port = await ensureViewer()
+            const total = await viewer.pageCount(pdf).catch(() => 0)
+            const page = total > 0 ? Math.min(total, requested) : requested
             const id = registerFile(pdf)
             if (config.prefetch !== false) viewer.prefetch(pdf, page)
             return { kind: 'success', text: `[📄 ${basename(pdf)} · 第 ${page} 页](<http://127.0.0.1:${port}/v/${id}/${page}>)` }
