@@ -35,7 +35,7 @@ dsh plugin --profile web add github:taoziliyouchong/dsh-pdf-jump
 
 要求：DSH 带宿主 `tools` 与 `systemPrompt` 服务（普通基础组合都含），Node 22.19+ 或 24+。
 
-要求 DSH >= 0.2.1-alpha.3；实测 0.2.1-alpha.3、0.2.2-rc.1，更高版本未验证。
+要求 DSH >= 0.2.1-alpha.1（下限按用到的服务与槽在 alpha.1 已存在推定）；实测 0.2.1-alpha.3、0.2.2-rc.1，更高版本未验证。
 
 ## 用法
 
