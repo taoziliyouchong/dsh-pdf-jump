@@ -12,11 +12,10 @@ import { createViewer, registerFile } from './lib/server.mjs'
 
 /** Cordis 插件名。 */
 export const name = 'dsh-pdf-jump'
-/** 需要的服务：工具注册表 + 系统提示（让模型知道什么时候该用它）+ 命令注册表（/pdf）。 */
-export const inject = ['tools', 'systemPrompt', 'commands']
-
 /** 报错尾行：插件出问题时，使用者第一眼看的就是错误文本。 */
 const FEEDBACK_HINT = '遇到问题：加 QQ 号 2171960697，或开 Issue https://github.com/taoziliyouchong/dsh-pdf-jump/issues'
+/** 需要的服务：工具注册表 + 系统提示（让模型知道什么时候该用它）+ 命令注册表（/pdf）。 */
+export const inject = ['tools', 'systemPrompt', 'commands']
 
 /**
  * 每轮都在模型上下文里的使用说明。工具描述只在工具列表里出现一次，
@@ -26,6 +25,7 @@ const GUIDANCE = [
   '本机装了 dsh-pdf-jump（在侧栏里看 PDF，两个独立入口）：',
   '- 硬规则：凡是跟 PDF 有关的答复——打开、翻页、读手册某章、按页查内容、提取文字、比对字体——第一步调 pdf-view 打开相关页，并把页链接给用户。只贴文字、只渲染图片、只给摘录，都算没做完。',
   '- 默认用 pdf-view（单页跳转模式）：带页码打开，页面带「上一页/下一页/跳页码/整本浏览」。用户只说「打开/看一眼某本 PDF」「打开第 N 页」也一律用它。',
+  '- 用户要在手册里找某个词：pdf-view 打开的页面里按 Ctrl+F（或点工具栏「搜索」）就能全篇搜，命中列页码与上下文、回车跳下一处；不用再拿 pdf_info / pdf_extract_text 逐页翻。只让页面上搜不到时，才回落到提取文字的工具。',
   '- 还不知道页码时：先用 dsh-pdf 的 pdf_info / pdf_extract_text（或 doc-probe-search）定位页码，再立刻用 pdf-view 跳到该页。',
   '- 用户说「放到对应的页」「给我看第 N 页」时：必须给 pdf-view 的页链接，不许用图片或摘录替代。',
   '- pdf-open 只在明确要求「原生预览、不生成图片、最快」时才用，不作为默认。',
@@ -114,7 +114,8 @@ export function apply(ctx, config = {}) {
       ctx.tools.register({
         name: 'pdf-view',
         description:
-          '在侧栏里看本地 PDF（默认入口）：单页跳转模式，页面带「上一页/下一页/跳页码/整本浏览」；'
+          '在侧栏里看本地 PDF（默认入口）：单页跳转模式，页面带「上一页/下一页/跳页码/整本浏览」，'
+          + '页面里按 Ctrl+F 可全篇搜索（命中列页码与上下文、回车跳下一处，整本浏览页同样支持）。'
           + '打开某本 PDF、翻到第 N 页、整本浏览都用它。pdf-open 只在明确要原生预览时用；要提取文字或元数据用 dsh-pdf 插件（需另装）的 pdf_info / pdf_extract_text。'
           + '本地服务把该页渲染成图，返回带「上一页/下一页/跳页码/整本浏览」的侧栏网页地址。'
           + 'file 给 PDF 路径或文件名片段（相对路径按会话工作目录解析），page 给 PDF 页序（从 1 开始，不从页脚推断印刷页码）。'
