@@ -41,8 +41,8 @@ try {
   })
   const total = Number(/共 (\d+) 页/.exec(html)?.[1] ?? 0)
   if (!total) fail('/v 里没有页数')
-  for (const needle of ['findInput', 'createFinder', 'pdfhl-layer', '/search/']) {
-    if (!html.includes(needle)) fail(`/v 缺少搜索相关片段：${needle}`)
+  for (const needle of ['findInput', 'createFinder', 'pdfhl-layer', '/search/', 'pdftext-layer', '/l/', 'pdfcopy-btn', 'pdfmenu', 'zoomIn', 'zoomReset']) {
+    if (!html.includes(needle)) fail(`/v 缺少搜索/文字层/缩放相关片段：${needle}`)
   }
 
   // 2. 页图（冷缓存）
@@ -95,8 +95,30 @@ try {
   const anchors = (docHtml.match(/id="p\d+"/g) || []).length
   if (anchors !== total) fail(`/d 页锚点 ${anchors} 与总页数 ${total} 不一致`)
   if (!docHtml.includes('findList')) fail('/d 缺少搜索列表容器')
+  for (const needle of ['pdftext-layer', 'textLayerIn', 'pdfcopy-btn', 'pdfmenu', 'zoomIn', 'zoomReset']) {
+    if (!docHtml.includes(needle)) fail(`/d 缺少文字层/缩放片段：${needle}`)
+  }
 
-  // 8. 命中矩形 + 全书搜索
+  // 8. 文字层：拖选复制用的版面
+  const textLayout = await timed('/l 文字层', async () => {
+    const res = await fetch(`${base}/l/${id}/${page}`)
+    if (!res.ok) fail(`/l 返回 ${res.status}`)
+    return res.json()
+  })
+  if (!Number.isFinite(textLayout.width) || textLayout.width <= 0) fail('/l 没有页宽')
+  if (!Number.isFinite(textLayout.height) || textLayout.height <= 0) fail('/l 没有页高')
+  for (const item of textLayout.items) {
+    if (typeof item.s !== 'string' || !item.s) fail('/l 文字片段缺少正文')
+    for (const key of ['x', 'y', 'w', 'h']) {
+      if (!Number.isFinite(item[key])) fail(`/l 坐标异常：${key}`)
+    }
+    if (item.x < -2 || item.y < -2) fail(`/l 文字片段超出页面左上：${JSON.stringify(item)}`)
+    if (item.x + item.w > textLayout.width + 2) fail(`/l 文字片段超出页宽：${JSON.stringify(item)}`)
+    if (item.y + item.h > textLayout.height + 2) fail(`/l 文字片段超出页高：${JSON.stringify(item)}`)
+  }
+  if (textLayout.items.length === 0) console.log('  ! 这一页没有文字层（扫描件）')
+
+  // 9. 命中矩形 + 全书搜索
   let matched = 0
   if (keyword) {
     const layout = await timed('/x 命中矩形', async () => {
@@ -144,6 +166,7 @@ try {
   console.log(`viewer ok   http://127.0.0.1:${port}`)
   console.log(`pages       ${total}；整本页锚点 ${anchors}`)
   console.log(`png ${png.length} 字节；p${other} ${png2.length} 字节；缩略图 ${thumb.length} 字节`)
+  console.log(`文字片段   ${textLayout.items.length} 段`)
   if (keyword) console.log(`命中共 ${matched} 处`)
 } finally {
   await viewer.stop()
